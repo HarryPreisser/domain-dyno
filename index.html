@@ -43,18 +43,24 @@ svg{width:100%;max-width:320px;height:auto}
 .stamp.buy{border-color:var(--teal);color:var(--teal)}
 .stamp.skip{border-color:var(--gauge-red);color:var(--gauge-red)}
 @keyframes slam{0%{transform:rotate(-5deg) scale(2.4);opacity:0}60%{opacity:1}100%{transform:rotate(-5deg) scale(1);opacity:1}}
-.controls{display:flex;gap:10px;align-items:stretch}
+.controls{display:flex;flex-direction:column;gap:10px;align-items:stretch}
 .field{flex:1;display:flex;align-items:center;background:#0c1014;border:1px solid #2a343e;border-radius:8px;padding:0 12px}
 .field input{flex:1;background:transparent;border:none;outline:none;color:var(--chrome);font-family:'IBM Plex Mono',monospace;font-size:18px;padding:14px 0}
 .field .ext{color:var(--dim);font-size:15px;margin-left:6px}
-button.go{background:var(--hazard);color:#11161b;border:none;border-radius:8px;font-family:'Saira Condensed',sans-serif;font-weight:800;font-size:18px;letter-spacing:.05em;text-transform:uppercase;padding:0 18px;cursor:pointer;transition:transform .08s ease,filter .15s ease}
+button.go{background:var(--hazard);color:#11161b;border:none;border-radius:8px;font-family:'Saira Condensed',sans-serif;font-weight:800;font-size:18px;letter-spacing:.05em;text-transform:uppercase;padding:14px 18px;cursor:pointer;transition:transform .08s ease,filter .15s ease}
 button.go:hover{filter:brightness(1.08)}
 button.go:active{transform:translateY(2px)}
-.toolrow{display:flex;justify-content:space-between;align-items:center;margin-top:14px;gap:10px}
+.toolrow{display:flex;justify-content:center;flex-wrap:wrap;align-items:center;margin-top:14px;gap:10px}
 .sound{background:#0c1014;border:1px solid #2a343e;color:var(--dim);border-radius:8px;padding:8px 12px;font-family:'IBM Plex Mono',monospace;font-size:12px;cursor:pointer}
 .sound.on{color:var(--teal);border-color:#27463f}
 .random{background:transparent;border:1px dashed #3a4650;color:var(--chrome);border-radius:8px;padding:8px 12px;font-family:'IBM Plex Mono',monospace;font-size:12px;cursor:pointer}
 .random:hover{border-color:var(--gold);color:var(--gold)}
+.die{display:inline-block;font-size:1.5em;vertical-align:-0.18em;animation:wiggle .45s ease-in-out infinite, dieGlow 1.2s ease-in-out infinite}
+.die-inner{display:inline-block;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes wiggle{0%,100%{transform:translateX(-4px) rotate(-8deg)}50%{transform:translateX(4px) rotate(8deg)}}
+@keyframes dieGlow{0%,100%{filter:drop-shadow(0 0 1px rgba(255,207,63,.35))}50%{filter:drop-shadow(0 0 12px rgba(255,207,63,1))}}
+@media (prefers-reduced-motion:reduce){.die,.die-inner{animation:none}}
 .hint{margin-top:14px;font-size:11px;color:var(--dim);text-align:center;line-height:1.9}
 .hint b{color:var(--teal);font-weight:600;cursor:pointer}
 .hint b:hover{color:var(--gold)}
@@ -129,7 +135,8 @@ footer{margin-top:40px;font-size:10px;color:#4a545d;text-align:center;max-width:
   </div>
   <div class="toolrow">
     <button class="sound on" id="soundBtn">🔊 Engine: ON</button>
-    <button class="random" id="randomBtn">🎲 Pull one from the collection</button>
+    <button class="sound" id="musicBtn">🎵 Music: OFF</button>
+    <button class="random" id="randomBtn"><span class="die"><span class="die-inner">🎲</span></span> Pull one from the collection</button>
   </div>
   <div class="hint" id="hint"></div>
 </div>
@@ -158,20 +165,25 @@ const OWNED=["girlfriend","gf","girl","girlfriends","novia","soulmate","companio
 "josephine","gwendolyn","magdalena","francesca","valentina","antoinette","octaviana",
 "lupita","bonita","chiquita","guadalupe","guillermina","felicidad","esperanza","rosalinda","linda","rosalia",
 "lucero","marisela","alejandra","anahi","belinda","angela","sonia","rose","ruby","sandy","carrie",
-"lali","sia","yuri","anitta","thalia"];
+"lali","sia","yuri","anitta","thalia",
+"luisa","reina","carla","lucia","nadia","claudia","valeria","ia"];
 
 const MYSTIC=["bruja","witches","lilith","mystic","psychic","venus","seraphina"];
 const DIVA=["thalia","anitta","lali","rosalia","yuri","sia"];
 const CULTURAL=["lupita","bonita","chiquita","guadalupe","guillermina","felicidad","esperanza","rosalinda",
-  "linda","rosalia","lucero","marisela","alejandra","anahi","belinda","angela","sonia","novia"];
+  "linda","rosalia","lucero","marisela","alejandra","anahi","belinda","angela","sonia","novia",
+  "luisa","reina","carla","lucia"];
 const COMPANION=["girlfriend","gf","girl","girlfriends","soulmate","companion","darling","waifu","ai.girlfriend",
   "princess","princesa"];
 const ARCHETYPE=["juliet","carmen","cassandra","esmeralda","veronica","alessandra","marrissa","marianne",
-  "genevieve","josephine","gwendolyn","magdalena","francesca","valentina","antoinette","octaviana","ruby","rose","sandy","carrie","savannah"];
+  "genevieve","josephine","gwendolyn","magdalena","francesca","valentina","antoinette","octaviana","ruby","rose","sandy","carrie","savannah",
+  "nadia","claudia","valeria"];
 const RWA=["real","realty","assistant","assistants","car","swarm","guide"];
+const AI=["ia"];
 
 const LANES={
   flagship:{label:"Flagship",color:"var(--gold)"},
+  ai:{label:"AI Root · Inteligencia Artificial",color:"#36e0ff"},
   companion:{label:"Companion / AI Girlfriend",color:"var(--teal)"},
   cultural:{label:"Cultural / Spanish Sub-Collection",color:"var(--rosa)"},
   diva:{label:"Latin-Pop Diva",color:"var(--violet)"},
@@ -182,6 +194,7 @@ const LANES={
 
 const verdicts={
   flagship:"Crown jewel. The category root every AI-companion agent will want a segment under.",
+  ai:"Two-letter AI root — 'inteligencia artificial' across every Romance language. The purest expression of the agent-namespace thesis.",
   companion:"Core thesis root — identity segments mint beneath names like this. Tier 1.",
   cultural:"Bilingual cultural root. Scarce, high-recognition, hard to replicate.",
   diva:"Latin-pop diva name. Strong cultural pull and instant recognition.",
@@ -195,7 +208,8 @@ function classify(name){
   if(name==="girlfriend")return{bucket:"flagship",score:100};
   if(name==="gf")return{bucket:"flagship",score:97};
   let bucket;
-  if(MYSTIC.includes(name))bucket="mystic";
+  if(AI.includes(name))bucket="ai";
+  else if(MYSTIC.includes(name))bucket="mystic";
   else if(DIVA.includes(name))bucket="diva";
   else if(COMPANION.includes(name))bucket="companion";
   else if(CULTURAL.includes(name))bucket="cultural";
@@ -203,8 +217,8 @@ function classify(name){
   else if(RWA.includes(name))bucket="rwa";
   else bucket=null;
   if(!bucket)return null;
-  const base={mystic:89,diva:91,companion:88,cultural:90,archetype:85,rwa:84}[bucket];
-  const span={mystic:6,diva:6,companion:7,cultural:5,archetype:8,rwa:9}[bucket];
+  const base={ai:97,mystic:89,diva:91,companion:88,cultural:90,archetype:85,rwa:84}[bucket];
+  const span={ai:3,mystic:6,diva:6,companion:7,cultural:5,archetype:8,rwa:9}[bucket];
   const score=base+(hash(name)%span);
   return{bucket,score};
 }
@@ -239,17 +253,17 @@ verdictEl=document.getElementById('verdict'),laneEl=document.getElementById('lan
 stampEl=document.getElementById('stamp'),input=document.getElementById('input'),
 btn=document.getElementById('btn'),fx=document.getElementById('fx'),
 dynoBox=document.getElementById('dynoBox'),soundBtn=document.getElementById('soundBtn'),
-randomBtn=document.getElementById('randomBtn'),hint=document.getElementById('hint');
+randomBtn=document.getElementById('randomBtn'),musicBtn=document.getElementById('musicBtn'),hint=document.getElementById('hint');
 
 let soundOn=true;
 document.getElementById('garageCount').textContent=new Set(OWNED).size;
-const chipPool=["girlfriend","carmen","venus","thalia","companion","lupita","linda","realty"];
+const chipPool=["girlfriend","ia","carmen","venus","thalia","companion","lupita","linda","realty"];
 hint.innerHTML="Try: "+chipPool.map(c=>`<b data-d="${c}">${c}</b>`).join(" · ");
 function pick(a){return a[Math.floor(Math.random()*a.length)];}
 
 /* build the portfolio showcase grid */
 (function buildShowcase(){
-  const order=["flagship","companion","cultural","diva","mystic","archetype"];
+  const order=["flagship","ai","companion","cultural","diva","mystic","archetype"];
   const byLane={};
   [...new Set(OWNED)].forEach(n=>{
     const c=classify(n);if(!c)return;
@@ -290,6 +304,54 @@ function revSound(t){
     osc.connect(g).connect(actx.destination);osc.start(c);osc.stop(c+1.2);
   }catch(e){}
 }
+/* ---- ambient garage synthwave (procedural, no audio files) ---- */
+let musicOn=false,mGain=null,mTimer=null,nextBar=0,barIdx=0;
+const MBPM=96,MBAR=(60/MBPM)*4;
+const MPROG=[
+  ["A1",["A2","C3","E3"],["A3","C4","E4","A3"]],
+  ["F1",["F2","A2","C3"],["F3","A3","C4","A3"]],
+  ["C2",["C3","E3","G3"],["G3","C4","E4","C4"]],
+  ["G1",["G2","B2","D3"],["G3","B3","D4","B3"]]
+];
+function noteHz(n){
+  const m={C:0,"C#":1,D:2,"D#":3,E:4,F:5,"F#":6,G:7,"G#":8,A:9,"A#":10,B:11};
+  return 440*Math.pow(2,((m[n.slice(0,-1)]+(+n.slice(-1)+1)*12)-69)/12);
+}
+function mVoice(hz,start,dur,type,vol,atk){
+  const o=actx.createOscillator(),g=actx.createGain();
+  o.type=type;o.frequency.value=hz;
+  g.gain.setValueAtTime(0.0001,start);
+  g.gain.exponentialRampToValueAtTime(vol,start+(atk||0.02));
+  g.gain.exponentialRampToValueAtTime(0.0001,start+dur);
+  o.connect(g).connect(mGain);o.start(start);o.stop(start+dur+0.05);
+}
+function scheduleBar(t){
+  const bar=MPROG[barIdx%4];
+  mVoice(noteHz(bar[0]),t,MBAR*0.98,"triangle",0.16,0.03);
+  bar[1].forEach(n=>mVoice(noteHz(n),t,MBAR*0.98,"sine",0.045,0.25));
+  const step=MBAR/8,arp=bar[2];
+  for(let i=0;i<8;i++)mVoice(noteHz(arp[i%arp.length]),t+i*step,step*0.9,"square",0.05,0.01);
+  barIdx++;
+}
+function mTick(){while(nextBar<actx.currentTime+0.3){scheduleBar(nextBar);nextBar+=MBAR;}}
+function startMusic(){
+  try{
+    actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+    if(actx.state==="suspended")actx.resume();
+    mGain=actx.createGain();
+    mGain.gain.setValueAtTime(0.0001,actx.currentTime);
+    mGain.gain.linearRampToValueAtTime(0.5,actx.currentTime+0.9);
+    mGain.connect(actx.destination);
+    barIdx=0;nextBar=actx.currentTime+0.12;mTick();mTimer=setInterval(mTick,60);
+  }catch(e){}
+}
+function stopMusic(){
+  if(mTimer){clearInterval(mTimer);mTimer=null;}
+  if(mGain){const g=mGain,t=actx.currentTime;g.gain.cancelScheduledValues(t);
+    g.gain.setValueAtTime(g.gain.value,t);g.gain.linearRampToValueAtTime(0.0001,t+0.5);
+    setTimeout(()=>{try{g.disconnect();}catch(e){}},700);mGain=null;}
+}
+
 function puff(){for(let i=0;i<5;i++){const s=document.createElement('div');s.className='smoke';const sz=18+Math.random()*22;s.style.width=s.style.height=sz+'px';s.style.left=(46+Math.random()*8)+'%';s.style.top='72%';s.style.animationDelay=(i*60)+'ms';fx.appendChild(s);setTimeout(()=>s.remove(),1200);}}
 function sparks(){for(let i=0;i<14;i++){const sp=document.createElement('div');sp.className='spark';sp.style.left='50%';sp.style.top='78%';const a=Math.random()*Math.PI*2,d=30+Math.random()*60;sp.style.setProperty('--dx',Math.cos(a)*d+'px');sp.style.setProperty('--dy',(Math.sin(a)*d-20)+'px');sp.style.background=pick(['#f5b50a','#e04a3a','#2fd3b5']);fx.appendChild(sp);setTimeout(()=>sp.remove(),650);}}
 
@@ -312,6 +374,7 @@ btn.addEventListener('click',rev);
 input.addEventListener('keydown',e=>{if(e.key==='Enter')rev();});
 document.querySelectorAll('.hint b').forEach(b=>b.addEventListener('click',()=>{input.value=b.dataset.d;rev();}));
 soundBtn.addEventListener('click',()=>{soundOn=!soundOn;soundBtn.textContent=soundOn?'🔊 Engine: ON':'🔇 Engine: OFF';soundBtn.classList.toggle('on',soundOn);});
+musicBtn.addEventListener('click',()=>{musicOn=!musicOn;musicBtn.textContent=musicOn?'🎵 Music: ON':'🎵 Music: OFF';musicBtn.classList.toggle('on',musicOn);if(musicOn)startMusic();else stopMusic();});
 randomBtn.addEventListener('click',()=>{input.value=pick(OWNED);rev();});
 window.addEventListener('load',()=>setTimeout(rev,400));
 </script>
